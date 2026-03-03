@@ -1,5 +1,11 @@
 import { Redis } from "@upstash/redis";
 
+const setCors = (res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+};
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -9,6 +15,7 @@ export default async function handler(req, res) {
   try {
     // CREATE
     if (req.method === "POST") {
+      setCors(res);
       const newObject = req.body;
 
       if (!newObject || typeof newObject !== "object") {
@@ -30,9 +37,15 @@ export default async function handler(req, res) {
 
       return res.status(200).json(objectWithId);
     }
-
+    
+    if (req.method === "OPTIONS") {
+      setCors(res);
+      return res.status(200).end();
+    }
+    
     // FETCH ALL
     if (req.method === "GET") {
+      setCors(res);
       const ids = await redis.lrange("myArray:ids", 0, -1);
 
       const items = await Promise.all(
@@ -44,6 +57,7 @@ export default async function handler(req, res) {
 
     // DELETE
     if (req.method === "DELETE") {
+      setCors(res);
       const { id } = req.query;
 
       if (!id) {
